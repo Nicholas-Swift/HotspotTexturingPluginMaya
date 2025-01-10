@@ -1,12 +1,12 @@
 import maya.cmds as cmds
 import webbrowser
-from hotspot_create import (
+from hotspot_texturing.hotspot_create import (
     set_file_node_texture_path,
     load_hotspot,
     create_hotspot
 )
-from hotspot_save import save_hotspot
-from hotspot_layout import map_faces_to_hotspots
+from hotspot_texturing.hotspot_save import save_hotspot
+from hotspot_texturing.hotspot_layout import map_faces_to_hotspots
 
 
 hotspotCurrentHotspotPath = ""
@@ -118,8 +118,8 @@ def create_hotspot_texturing_window():
         label="Hotspot Texturing",
         floating=True,
         widthProperty="free",    # Allow user to freely resize in width
-        initialWidth=200,
-        initialHeight=300,
+        initialWidth=300,
+        initialHeight=350,
         retain=True
     )
 

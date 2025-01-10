@@ -1,6 +1,6 @@
 import maya.cmds as cmds
 import json
-from hotspot_layout import (
+from hotspot_texturing.hotspot_layout import (
     align_uv_to_hotspot,
     apply_uv_mapping
 )

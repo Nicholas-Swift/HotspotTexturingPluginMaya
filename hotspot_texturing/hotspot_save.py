@@ -1,7 +1,7 @@
 import maya.cmds as cmds
 import json
 import os
-from hotspot_create import get_file_node_texture_path
+from hotspot_texturing.hotspot_create import get_file_node_texture_path
 
 
 def is_rectangle(uv_coords):
