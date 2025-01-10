@@ -1,0 +1,38 @@
+Hotspot Texturing Plugin Installation Instructions
+
+Follow these steps to install and set up the Hotspot Texturing plugin for Maya.
+
+============================================================
+
+Step 1: Quit Maya. Before proceeding with the installation, ensure that Maya is closed.
+
+Step 2: Copy the Plugin Folder
+  1. Locate the "hotspot_texturing" folder included with this plugin.
+  2. Copy the entire folder.
+  3. Paste the folder into the following directory on your computer:
+    * Windows: C:\Users<yourusername>\Documents\maya\2025\scripts
+    * Mac: /Users/<yourusername>/Library/Preferences/Autodesk/maya/2025/scripts
+
+  If your Maya version differs, replace "2025" with your specific version number.
+  If you are on Mac and can't find /Library, open Terminal and type "open ./Library/Preferences", hit enter, then navigate to the correct directory.
+
+Step 3: Open Maya.
+
+Step 4: Add the Script to the Toolbar
+  1. Open the Script Editor in Maya.
+    * You can find it in the bottom right corner of the Maya interface or under the Windows > General Editors > Script Editor menu.
+  2. In the Python tab, paste the following code:
+```
+from hotspot_texturing.hotspot_ui import create_hotspot_texturing_window
+create_hotspot_texturing_window()
+```
+  3. Press Ctrl + A to select all (Command + A on Mac).
+  4. Drag and drop the selected code to the Maya Toolbar to create a custom button.
+
+============================================================
+
+Additional Notes
+
+If you encounter any issues during installation, ensure that the "hotspot_texturing" folder is placed in the correct directory.
+
+This plugin has been tested with Maya 2025. Compatibility with older versions should work.
