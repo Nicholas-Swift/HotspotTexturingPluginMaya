@@ -29,9 +29,9 @@ def load_new_hotspot():
         cmds.inViewMessage(amg=f"Loaded hotspot from: {file_path}", pos="midCenter", fade=True)
         update_text_inputs()
     else:
-        msg = "Loaded hotspot did not provide a valid file."
+        msg = "Failed to load hotspot. Loaded hotspot did not provide a valid file."
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
         cmds.error(msg)
-        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True)
 
 def update_texture(file_path_field):
     """
@@ -56,8 +56,8 @@ def layout_faces():
         map_faces_to_hotspots(hotspotCurrentHotspotPath)
     else:
         msg = "No hotspot file to read from. Cannot layout faces."
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
         cmds.error(msg)
-        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True)
 
 def open_help():
     """Open the help documentation in a web browser."""

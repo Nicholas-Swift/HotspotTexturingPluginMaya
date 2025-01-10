@@ -55,9 +55,8 @@ def capture_uv_data():
     selection = cmds.ls(selection=True, flatten=True)
     if not selection:
         msg = "No faces selected. Select all relevant faces before saving."
-        cmds.error(msg)
-        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True)
-        return None
+        cmds.warning(msg)
+        return []
 
     hotspots = {}
     failed_faces = []
@@ -84,7 +83,7 @@ def capture_uv_data():
     if validation_failed:
         # Since at least one face is invalid, treat this as a blocking error
         cmds.select(failed_faces, replace=True)
-        cmds.error("Validation failed for one or more faces. Failed to save.")
+        cmds.warning("Validation failed for one or more faces. Failed to save.")
         return None
 
     # Get the texture path from the selected mesh (assumes all faces belong to the same mesh)
@@ -105,7 +104,7 @@ def save_hotspots_to_json(hotspots):
     Returns the file path if saved successfully, or None if canceled.
     """
     if not hotspots:
-        cmds.error("No hotspots to save.")
+        cmds.warning("No hotspots to save.")
         return None
 
     project_path = cmds.workspace(query=True, rootDirectory=True)
@@ -138,14 +137,16 @@ def save_hotspot():
     Returns the file path if successful, or None if canceled or failed.
     """
     hotspot_data = capture_uv_data()
-    if not hotspot_data:
+    if not hotspot_data or len(hotspot_data) == 0:
         # Either user canceled or some error occurred
-        cmds.error("Capture UV data failed or aborted. No file saved.")
+        msg = "Failed to save hotspot. " + "Could not capture UV data, save aborted." if hotspot_data is None else "No faces selected, please select relevant faces before saving."
         cmds.inViewMessage(
-            amg="Failed to capture UV data. No file saved.",
+            amg=msg,
             pos="midCenter",
-            fade=True
+            fade=True,
+            backColor=0x00FF0000
         )
+        cmds.error(msg)
         return None
 
     file_path = save_hotspots_to_json(hotspot_data)

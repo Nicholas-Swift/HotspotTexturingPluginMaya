@@ -1,4 +1,5 @@
 import maya.cmds as cmds
+import os
 import json
 from hotspot_texturing.hotspot_layout import (
     align_uv_to_hotspot,
@@ -117,10 +118,17 @@ def load_hotspot():
     Load a hotspot from a JSON file, create and layout the plane 
     based on hotspot data (texture, UV locations, etc.).
     """
+    project_path = cmds.workspace(query=True, rootDirectory=True)
+    hotspots_folder = os.path.join(project_path, "hotspots")
+    if not os.path.exists(hotspots_folder):
+        os.makedirs(hotspots_folder)
+
+    # Prompt for save location
     file_path = cmds.fileDialog2(
         fileFilter="JSON Files (*.json)", 
         dialogStyle=2, 
-        fileMode=1
+        fileMode=1,
+        startingDirectory=hotspots_folder
     )
     if not file_path:
         return
@@ -133,7 +141,7 @@ def load_hotspot():
     num_hotspots = len(hotspots)
 
     if num_hotspots == 0:
-        cmds.error("No hotspots found in the JSON file.")
+        cmds.warning("No hotspots found in the JSON file.")
         return
 
     plane_name = "hotspot_temp"

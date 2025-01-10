@@ -44,7 +44,7 @@ def align_uv_to_hotspot(uv_coords, hotspot_uv_coords):
 
     # Avoid division-by-zero errors
     if island_width == 0 or island_height == 0:
-        cmds.error("UV island has zero width or height. Cannot align.")
+        cmds.warning("UV island has zero width or height. Cannot align.")
         return uv_coords  # Return original to avoid further errors
 
     scale_u = hotspot_width / island_width
@@ -137,12 +137,16 @@ def map_faces_to_hotspots(hotspots_file):
     """
     hotspots = load_hotspots_file(hotspots_file)
     if not hotspots:
-        cmds.error("Hotspot file failed to load.")
+        msg = "Failed to layout. Hotspot file failed to load."
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
+        cmds.error(msg)
         return
 
     selected_objects = cmds.ls(selection=True)
     if not selected_objects:
-        cmds.error("No faces were selected.")
+        msg = "Failed to layout. No faces were selected. Please select faces before trying again."
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
+        cmds.error(msg)
         return
 
     selected_object = selected_objects[0]
@@ -150,7 +154,9 @@ def map_faces_to_hotspots(hotspots_file):
     faces = cmds.ls(faces, flatten=True)
 
     if not faces:
-        cmds.error(f"No faces found on object {selected_object}. Nothing to map.")
+        msg = "Failed to layout. No faces found on object {selected_object}. Nothing to map."
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
+        cmds.error(msg)
         return
 
     for face in faces:
