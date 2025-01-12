@@ -1,6 +1,7 @@
 import maya.cmds as cmds
 import json
 import os
+import math
 
 
 def normalize_uv_pairs(uv_pairs):
@@ -81,7 +82,6 @@ def load_hotspots_file(file_path):
         hotspots = json.load(f)
     return hotspots
 
-
 def find_closest_hotspot(island_bounds, hotspots):
     """
     Identify the hotspot that best matches the UV island bounds by comparing width/height differences.
@@ -91,10 +91,15 @@ def find_closest_hotspot(island_bounds, hotspots):
     Returns the name of the best matched hotspot, or None if none found.
     """
     best_match = None
-    min_difference = float('inf')
+    min_scale_diff = float('inf')
+    best_location_diff = float('inf')
 
-    island_width = island_bounds[1] - island_bounds[0]
-    island_height = island_bounds[3] - island_bounds[2]
+    island_min_u, island_max_u, island_min_v, island_max_v = island_bounds
+    island_width = island_max_u - island_min_u
+    island_height = island_max_v - island_min_v
+
+    island_center_u = (island_min_u + island_max_u) / 2.0
+    island_center_v = (island_min_v + island_max_v) / 2.0
 
     for hotspot_name, data in hotspots.items():
         # Skip any non-hotspot entries like "texture_path"
@@ -111,14 +116,27 @@ def find_closest_hotspot(island_bounds, hotspots):
         hotspot_width = hotspot_max_u - hotspot_min_u
         hotspot_height = hotspot_max_v - hotspot_min_v
 
-        # Calculate dimension difference
-        width_difference = abs(island_width - hotspot_width)
-        height_difference = abs(island_height - hotspot_height)
-        total_difference = width_difference + height_difference
+        width_diff = abs(island_width - hotspot_width)
+        height_diff = abs(island_height - hotspot_height)
+        scale_diff = width_diff + height_diff
 
-        if total_difference < min_difference:
-            min_difference = total_difference
+        # Calculate center distance (location difference)
+        hotspot_center_u = (hotspot_min_u + hotspot_max_u) / 2.0
+        hotspot_center_v = (hotspot_min_v + hotspot_max_v) / 2.0
+        location_diff = math.sqrt(
+            (hotspot_center_u - island_center_u)**2 +
+            (hotspot_center_v - island_center_v)**2
+        )
+
+        if scale_diff < min_scale_diff:
+            min_scale_diff = scale_diff
+            best_location_diff = location_diff
             best_match = hotspot_name
+        elif math.isclose(scale_diff, min_scale_diff, rel_tol=1e-6, abs_tol=1e-9):
+            # Tie on scale difference, compare location
+            if location_diff < best_location_diff:
+                best_location_diff = location_diff
+                best_match = hotspot_name
 
     return best_match
 
