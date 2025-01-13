@@ -1,12 +1,12 @@
 # Hotspot Texturing Plugin for Maya
 
-This is Maya plugin designed to streamline the UV mapping process in Maya from trims and atlases. Inspired by tools used in industry at companies like [Valve](https://developer.valvesoftware.com/wiki/Half-Life:_Alyx_Workshop_Tools/Level_Design/Hotspot_Texturing) and [Naughty Dog](https://www.artstation.com/artwork/qQGK6y).
+This Maya plugin is designed to streamline the UV mapping process in Maya for trim sheets and texture atlases. Inspired by tools used in industry at companies like [Valve](https://developer.valvesoftware.com/wiki/Half-Life:_Alyx_Workshop_Tools/Level_Design/Hotspot_Texturing) and [Naughty Dog](https://www.artstation.com/artwork/qQGK6y).
 
 Key Features:
 - Automate UV mapping for trims and atlas textures.
 - Manage several different hotspot files for different textures.
 
-Check out a video demo of the plugin in action: [Video Link Placeholder]
+[Check out a video demo of the plugin in action here](https://www.youtube.com/watch?v=UECiabyNWI4).
 
 ---
 
@@ -18,9 +18,10 @@ Follow these steps to install and set up the Hotspot Texturing plugin for Maya.
 Before proceeding with the installation, ensure that Maya is closed.
 
 ### Step 2: Copy the Plugin Folder
-1. Locate the `hotspot_texturing` folder included with this repository.
-2. Copy the folder.
-3. Paste it into the following directory on your computer:
+1. Download this repo as a zip file, and unzip.
+2. Locate the `hotspot_texturing` folder that contains the `.py` files.
+3. Copy the folder.
+4. Paste it into the following directory on your computer:
    - **Windows**: `C:\Users\<yourusername>\Documents\maya\2025\scripts`
    - **Mac**: `/Users/<yourusername>/Library/Preferences/Autodesk/maya/2025/scripts`
 
@@ -29,7 +30,7 @@ Before proceeding with the installation, ensure that Maya is closed.
    **Note for Mac users**: If you can't find `/Library`, open Terminal and type `open ./Library/Preferences`, then navigate to the correct directory.
 
 ### Step 3: Open Maya
-Restart Maya to ensure it recognizes the newly added script folder.
+Restart Maya to make sure it recognizes the newly added script folder.
 
 ### Step 4: Add the Script to the Toolbar
 1. Open the **Script Editor** in Maya.
@@ -43,7 +44,7 @@ Restart Maya to ensure it recognizes the newly added script folder.
    ```
 
 3. Press **Ctrl + A** to select all (or **Command + A** on Mac).
-4. Drag and drop the selected code to the Maya Toolbar to create a custom button.
+4. Drag and drop the selected code to your Maya Shelf to create a custom button.
 
 ---
 
