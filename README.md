@@ -6,7 +6,9 @@ Key Features:
 - Automate UV mapping for trims and atlas textures.
 - Manage several different hotspot files for different textures.
 
-[Check out a video demo of the plugin in action here](https://www.youtube.com/watch?v=UMgLn1B00sg&ab_channel=NicholasSwift).
+Check out a [video demo of the plugin in action here](https://www.youtube.com/watch?v=UMgLn1B00sg&ab_channel=NicholasSwift).
+
+Learn more at the [ArtStation blog post here](https://www.artstation.com/blogs/wnswift/3ZEVN/hotspot-texturing-plugin-for-maya).
 
 ---
 
