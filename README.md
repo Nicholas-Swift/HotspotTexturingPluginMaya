@@ -6,7 +6,7 @@ Key Features:
 - Automate UV mapping for trims and atlas textures.
 - Manage several different hotspot files for different textures.
 
-[Check out a video demo of the plugin in action here](https://www.youtube.com/watch?v=UECiabyNWI4).
+[Check out a video demo of the plugin in action here](https://www.youtube.com/watch?v=UMgLn1B00sg&ab_channel=NicholasSwift).
 
 ---
 
