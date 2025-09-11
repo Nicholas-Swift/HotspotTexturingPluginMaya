@@ -61,7 +61,7 @@ def layout_faces():
 
 def open_help():
     """Open the help documentation in a web browser."""
-    webbrowser.open("https://www.google.com")
+    webbrowser.open("https://www.artstation.com/wnswift/blog/3ZEVN/hotspot-texturing-plugin-for-maya")
 
 def update_text_inputs():
     """
@@ -170,6 +170,7 @@ def create_hotspot_texturing_window():
         height=25,
         width=80,
         flat=False,
+        annotation="Load a saved hotspot configuration that contains UV layout templates and texture paths.",
         command=lambda: load_new_hotspot()
     )
     cmds.setParent("..")
@@ -193,6 +194,7 @@ def create_hotspot_texturing_window():
         label="Create New Hotspot",
         height=25,
         flat=False,
+        annotation="Create a new hotspot template with your chosen texture.",
         command=lambda *_: create_new_hotspot()
     )
 
@@ -203,6 +205,7 @@ def create_hotspot_texturing_window():
         label="Save Hotspot As...",
         height=25,
         flat=False,
+        annotation="Save the currently selected faces as a hotspot configuration file.\nEach selected face must form a perfect rectangle in UV space to be saved.",
         command=lambda *_: save_current_hotspot()
     )
 
@@ -224,6 +227,7 @@ def create_hotspot_texturing_window():
         height=25,
         width=80,
         flat=False,
+        annotation="Select a new texture image file to update the material applied to your hotspot plane.\nThis changes the visual reference for UV layout planning.",
         command=lambda: update_texture(texture_path)
     )
     cmds.setParent("..")
@@ -246,5 +250,6 @@ def create_hotspot_texturing_window():
         label="Layout Faces",
         height=25,
         flat=False,
+        annotation="Automatically arrange the UVs of selected faces to match the loaded hotspot configuration.\nThis maps each UV shell to the closest matching hotspot template.",
         command=lambda *_: layout_faces()
     )
