@@ -6,7 +6,7 @@ from hotspot_texturing.hotspot_create import (
     create_hotspot
 )
 from hotspot_texturing.hotspot_save import save_hotspot
-from hotspot_texturing.hotspot_layout import map_faces_to_hotspots
+from hotspot_texturing.hotspot_layout import map_faces_to_hotspots, map_faces_to_trim
 
 
 hotspotCurrentHotspotPath = ""
@@ -56,6 +56,20 @@ def layout_faces():
         map_faces_to_hotspots(hotspotCurrentHotspotPath)
     else:
         msg = "No hotspot file to read from. Cannot layout faces."
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
+        cmds.error(msg)
+
+
+def layout_faces_to_trim():
+    """
+    Layout faces to trim hotspots according to the currently loaded hotspot JSON file.
+    Uses trim-specific mapping rules: closest Y-axis hotspot, uniform scaling to match height,
+    and preserves X-axis positioning.
+    """
+    if hotspotCurrentHotspotPath:
+        map_faces_to_trim(hotspotCurrentHotspotPath)
+    else:
+        msg = "No hotspot file to read from. Cannot layout faces to trim."
         cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
         cmds.error(msg)
 
@@ -247,9 +261,19 @@ def create_hotspot_texturing_window():
     cmds.iconTextButton(
         style="iconAndTextHorizontal",
         image="UV_Unfold_Brush.png",
-        label="Layout Faces",
+        label="Fit to Hotspot",
         height=25,
         flat=False,
-        annotation="Automatically arrange the UVs of selected faces to match the loaded hotspot configuration.\nThis maps each UV shell to the closest matching hotspot template.",
+        annotation="Precisely fit UVs to match hotspot templates exactly.\nMaps each UV shell to the closest matching hotspot with perfect rectangular alignment.",
         command=lambda *_: layout_faces()
+    )
+
+    cmds.iconTextButton(
+        style="iconAndTextHorizontal",
+        image="UVAlignMiddleV.png",
+        label="Layout Faces to Trim",
+        height=25,
+        flat=False,
+        annotation="Map UV shells to horizontally tiling trim strips.\nFinds the closest trim by Y-axis distance, scales uniformly to match height, and preserves X-axis tiling position.",
+        command=lambda *_: layout_faces_to_trim()
     )

@@ -5,6 +5,7 @@ import math
 import maya.api.OpenMaya as om
 import re
 
+
 def normalize_uv_pairs(uv_pairs):
     """
     Normalize UV pairs to ensure no negative zeros.
@@ -287,6 +288,97 @@ def find_closest_hotspot(island_bounds, hotspots):
 
     return best_match
 
+
+def find_closest_trim_hotspot(island_bounds, hotspots):
+    """
+    Find the closest hotspot for trim mapping based on Y-axis distance.
+    island_bounds is a tuple (min_u, max_u, min_v, max_v).
+    hotspots is a dict containing "hotspot_x": { "uv_coords": [...] } plus possibly "texture_path".
+    
+    Returns the name of the closest hotspot based on Y-axis center distance, or None if none found.
+    """
+    best_match = None
+    min_y_distance = float('inf')
+
+    island_min_u, island_max_u, island_min_v, island_max_v = island_bounds
+    island_center_v = (island_min_v + island_max_v) / 2.0
+
+    for hotspot_name, data in hotspots.items():
+        # Skip any non-hotspot entries like "texture_path"
+        if not hotspot_name.startswith("hotspot_"):
+            continue
+
+        if not isinstance(data, dict) or "uv_coords" not in data:
+            cmds.warning(f"Invalid hotspot data: {hotspot_name} -> {data}")
+            continue
+
+        hotspot_uv_coords = normalize_uv_pairs(data["uv_coords"])
+        hotspot_min_u, hotspot_max_u, hotspot_min_v, hotspot_max_v = get_uv_bounds(hotspot_uv_coords)
+
+        # Calculate Y-axis center distance
+        hotspot_center_v = (hotspot_min_v + hotspot_max_v) / 2.0
+        y_distance = abs(hotspot_center_v - island_center_v)
+
+        if y_distance < min_y_distance:
+            min_y_distance = y_distance
+            best_match = hotspot_name
+
+    return best_match
+
+
+def align_uv_to_trim(uv_coords, hotspot_uv_coords):
+    """
+    Align UV coordinates to a trim hotspot with special trim mapping rules:
+    1. Scale uniformly until the vertical height matches the hotspot
+    2. Position to match Y-axis but preserve X-axis positioning
+    3. Only consider topmost and bottommost points for bounding box
+    """
+    # Normalize first
+    uv_coords = normalize_uv_pairs(uv_coords)
+    hotspot_uv_coords = normalize_uv_pairs(hotspot_uv_coords)
+
+    # For trim mapping, we only care about the vertical bounds (topmost and bottommost points)
+    v_values = [uv[1] for uv in uv_coords]
+    island_min_v, island_max_v = min(v_values), max(v_values)
+    island_height = island_max_v - island_min_v
+
+    # Get hotspot vertical bounds
+    hotspot_v_values = [uv[1] for uv in hotspot_uv_coords]
+    hotspot_min_v, hotspot_max_v = min(hotspot_v_values), max(hotspot_v_values)
+    hotspot_height = hotspot_max_v - hotspot_min_v
+
+    # Avoid division-by-zero errors
+    if island_height == 0:
+        cmds.warning("UV island has zero height. Cannot align to trim.")
+        return uv_coords  # Return original to avoid further errors
+
+    # Calculate uniform scale based on height matching
+    uniform_scale = hotspot_height / island_height
+
+    # Calculate the center points for vertical alignment
+    island_center_v = (island_min_v + island_max_v) / 2.0
+    hotspot_center_v = (hotspot_min_v + hotspot_max_v) / 2.0
+    
+    # Calculate translation needed to align centers vertically
+    v_translation = hotspot_center_v - island_center_v
+
+    aligned_uvs = []
+    for u, v in uv_coords:
+        # Apply uniform scaling around the island center
+        island_center_u = sum(coord[0] for coord in uv_coords) / len(uv_coords)
+        
+        # Scale uniformly around the center point
+        scaled_u = island_center_u + (u - island_center_u) * uniform_scale
+        scaled_v = island_center_v + (v - island_center_v) * uniform_scale
+        
+        # Apply vertical translation only (preserve X positioning)
+        final_u = scaled_u  # No X translation
+        final_v = scaled_v + v_translation
+        
+        aligned_uvs.append((final_u, final_v))
+
+    return aligned_uvs
+
 _comp_re = re.compile(r'^(?P<mesh>.+?)\.(?:map|uv)\[(?P<idx>\d+)\]$')
 
 def _mesh_fn(mesh_or_shape):
@@ -438,4 +530,85 @@ def map_faces_to_hotspots(hotspots_file):
         cmds.inViewMessage(amg=msg, pos="midCenter", fade=True)
     else:
         msg = f"Some UVs were not mapped to a hotspot. {num_success} of {len(all_uvs_two_array)} UVs were mapped to a hotspot."
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True)
+
+
+def map_faces_to_trim(hotspots_file):
+    """
+    Map selected UV shells to horizontally tiling trim hotspots.
+    This function differs from map_faces_to_hotspots in several ways:
+    1. Finds the closest hotspot based on Y-axis distance (vertically closest)
+    2. Scales uniformly until vertical height matches the hotspot
+    3. Positions to match Y-axis but preserves X-axis positioning
+    4. Only considers topmost and bottommost points for bounding calculations
+    """
+    hotspots = load_hotspots_file(hotspots_file)
+    if not hotspots:
+        msg = "Failed to layout. Hotspot file failed to load."
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
+        cmds.error(msg)
+        return
+
+    # Get all selected faces
+    selected_faces = cmds.ls(selection=True, flatten=True)
+    if not selected_faces:
+        msg = "Failed to layout. No faces were selected. Please select faces before trying again."
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
+        cmds.error(msg)
+        return
+
+    # Split all UVs by shells
+    all_uvs_two_array = group_uvs_by_selected_shells_from_faces(selected_faces)
+
+    num_success = 0
+
+    for all_uvs in all_uvs_two_array:
+        # Remove duplicates while preserving order
+        unique_uvs = []
+        seen = set()
+        for uv in all_uvs:
+            if uv not in seen:
+                unique_uvs.append(uv)
+                seen.add(uv)
+
+        if not unique_uvs:
+            msg = "Failed to layout. No UV components found in selection."
+            cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
+            cmds.error(msg)
+            break
+
+        # Get UV coordinates
+        uv_coords_flat = cmds.polyEditUV(unique_uvs, query=True)
+        uv_coords = [(uv_coords_flat[i], uv_coords_flat[i + 1])
+                    for i in range(0, len(uv_coords_flat), 2)]
+
+        # For trim mapping, we only need the overall bounds (not perfect rectangles)
+        island_bounds = get_uv_bounds(uv_coords)
+
+        # Find closest trim hotspot based on Y-axis distance
+        matched_hotspot = find_closest_trim_hotspot(island_bounds, hotspots)
+        if not matched_hotspot:
+            cmds.warning("Could not find a matching trim hotspot. Skipping...")
+            break
+
+        # Align UVs to trim hotspot using special trim rules
+        hotspot_uv_coords = hotspots[matched_hotspot]["uv_coords"]
+        aligned_uvs = align_uv_to_trim(uv_coords, hotspot_uv_coords)
+        
+        # Apply the aligned UV coordinates
+        apply_uv_mapping(unique_uvs, aligned_uvs)
+
+        num_success += 1
+
+    # Show success message
+    if num_success == 0:
+        msg = "Failed to layout. No UVs were mapped to a trim hotspot."
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
+        cmds.error(msg)
+        return
+    elif num_success == len(all_uvs_two_array):
+        msg = "All UVs were mapped to trim hotspots successfully!"
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True)
+    else:
+        msg = f"Some UVs were not mapped to trim hotspots. {num_success} of {len(all_uvs_two_array)} UVs were mapped to trim hotspots."
         cmds.inViewMessage(amg=msg, pos="midCenter", fade=True)
