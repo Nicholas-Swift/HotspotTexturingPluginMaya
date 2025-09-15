@@ -230,24 +230,25 @@ def apply_uv_positions(new_positions):
         except Exception as e:
             cmds.warning(f"Failed to set UV {uv_name} to ({new_u}, {new_v}): {e}")
 
-def find_closest_hotspot(island_bounds, hotspots):
+def find_closest_hotspot(island_bounds, hotspots, scale_similarity_threshold=0.01):
     """
-    Identify the hotspot that best matches the UV island bounds by comparing width/height differences.
+    Identify the hotspot that best matches the UV island bounds by comparing width/height differences,
+    with location-based selection when scales are similar.
+    
     island_bounds is a tuple (min_u, max_u, min_v, max_v).
     hotspots is a dict containing "hotspot_x": { "uv_coords": [...] } plus possibly "texture_path".
+    scale_similarity_threshold: If scale differences are within this threshold, prioritize location over size.
     
     Returns the name of the best matched hotspot, or None if none found.
     """
-    best_match = None
-    min_scale_diff = float('inf')
-    best_location_diff = float('inf')
-
     island_min_u, island_max_u, island_min_v, island_max_v = island_bounds
     island_width = island_max_u - island_min_u
     island_height = island_max_v - island_min_v
-
     island_center_u = (island_min_u + island_max_u) / 2.0
     island_center_v = (island_min_v + island_max_v) / 2.0
+
+    # Collect all candidates for scale comparison
+    candidates = []
 
     for hotspot_name, data in hotspots.items():
         # Skip any non-hotspot entries like "texture_path"
@@ -276,17 +277,28 @@ def find_closest_hotspot(island_bounds, hotspots):
             (hotspot_center_v - island_center_v)**2
         )
 
-        if scale_diff < min_scale_diff:
-            min_scale_diff = scale_diff
-            best_location_diff = location_diff
-            best_match = hotspot_name
-        elif math.isclose(scale_diff, min_scale_diff, rel_tol=1e-6, abs_tol=1e-9):
-            # Tie on scale difference, compare location
-            if location_diff < best_location_diff:
-                best_location_diff = location_diff
-                best_match = hotspot_name
+        candidates.append({
+            'name': hotspot_name,
+            'scale_diff': scale_diff,
+            'location_diff': location_diff
+        })
 
-    return best_match
+    if not candidates:
+        return None
+
+    # Find the best scale difference
+    min_scale_diff = min(c['scale_diff'] for c in candidates)
+    
+    # Get all candidates with scale differences within the similarity threshold of the best
+    best_candidates = []
+    for candidate in candidates:
+        if candidate['scale_diff'] <= min_scale_diff + scale_similarity_threshold:
+            best_candidates.append(candidate)
+    
+    # Among the best candidates, choose the one with the smallest location difference
+    best_candidate = min(best_candidates, key=lambda c: c['location_diff'])
+    
+    return best_candidate['name']
 
 
 def find_closest_trim_hotspot(island_bounds, hotspots):
