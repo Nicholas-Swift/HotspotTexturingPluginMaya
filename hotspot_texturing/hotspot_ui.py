@@ -107,6 +107,31 @@ def create_new_hotspot():
         cmds.inViewMessage(amg=f"New hotspot created with texture: {texture_path}", pos="midCenter", fade=True)
         update_text_inputs()
 
+def select_current_hotspot_object():
+    """
+    Find and select the hotspot object ("hotspot_temp").
+    If no hotspot is loaded, show an error message.
+    If the object doesn't exist but a hotspot is loaded, perform load hotspot on the current hotspot file.
+    """
+    # First check if there's a hotspot loaded
+    if not hotspotCurrentHotspotPath:
+        msg = "No hotspot is loaded. Please load a hotspot first."
+        cmds.inViewMessage(amg=msg, pos="midCenter", fade=True, backColor=0x00FF0000)
+        cmds.warning(msg)
+        return
+    
+    hotspot_object_name = "hotspot_temp"
+    
+    # Check if hotspot object exists
+    if cmds.objExists(hotspot_object_name):
+        # Select the hotspot object
+        cmds.select(hotspot_object_name)
+        cmds.inViewMessage(amg=f"Selected hotspot object: {hotspot_object_name}", pos="midCenter", fade=True)
+    else:
+        # Object doesn't exist, but we have a current hotspot file, so load it
+        cmds.inViewMessage(amg="Hotspot object not found. Loading hotspot...", pos="midCenter", fade=True)
+        load_new_hotspot()
+
 def save_current_hotspot():
     """
     Saves the currently selected faces as a hotspot JSON file.
@@ -188,6 +213,18 @@ def create_hotspot_texturing_window():
         command=lambda: load_new_hotspot()
     )
     cmds.setParent("..")
+    
+    # Select Current Hotspot Object button
+    cmds.iconTextButton(
+        style="iconAndTextHorizontal",
+        image="selectFrontFacingUV.png",
+        label="Select Current Hotspot Object",
+        height=25,
+        flat=False,
+        annotation="Find and select the hotspot object ('hotspot_temp') if a hotspot file is loaded.",
+        command=lambda: select_current_hotspot_object(),
+        parent=current_hotspot_frame
+    )
 
     #
     # CREATE SECTION
@@ -205,7 +242,7 @@ def create_hotspot_texturing_window():
     cmds.iconTextButton(
         style="iconAndTextHorizontal",
         image="polyCreateUVShell.png",
-        label="Create New Hotspot",
+        label="Create New Hotspot From Texture",
         height=25,
         flat=False,
         annotation="Create a new hotspot template with your chosen texture.",
